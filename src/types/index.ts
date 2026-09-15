@@ -54,11 +54,13 @@ export interface UserProfile {
   authProvider?: 'google' | 'email' | 'guest';
   isGoogleUser?: boolean;
   name: string;
+  displayName?: string;
   email: string;
   phone?: string;
   province?: string;
   district?: string;
   avatarUrl?: string;
+  photoURL?: string;
   xp: number;
   streak: number;
   lastActiveDate: string;

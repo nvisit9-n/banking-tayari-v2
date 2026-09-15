@@ -31,23 +31,51 @@ export class StorageService {
   // --- User Profile ---
   static getUserProfile(): UserProfile {
     try {
-      const authData = safeStorage.getItem('user_profile');
+      const authData = safeStorage.getItem('user_profile') || (typeof localStorage !== 'undefined' ? localStorage.getItem('user_profile') : null);
       if (authData) {
         const parsed = safeJsonParse(authData, null);
-        if (parsed) {
-          return sanitizeUserProfile({ ...INITIAL_USER, ...parsed });
+        if (parsed && typeof parsed === 'object') {
+          return sanitizeUserProfile(parsed);
         }
       }
-      const data = safeStorage.getItem(STORAGE_KEYS.USER_PROFILE);
+      const data = safeStorage.getItem(STORAGE_KEYS.USER_PROFILE) || (typeof localStorage !== 'undefined' ? localStorage.getItem(STORAGE_KEYS.USER_PROFILE) : null);
       if (data) {
         const parsed = safeJsonParse(data, null);
-        if (parsed) {
-          return sanitizeUserProfile({ ...INITIAL_USER, ...parsed });
+        if (parsed && typeof parsed === 'object') {
+          return sanitizeUserProfile(parsed);
         }
       }
-      return sanitizeUserProfile(INITIAL_USER);
+      return sanitizeUserProfile({
+        id: 'user_default',
+        name: 'परीक्षार्थी',
+        displayName: 'परीक्षार्थी',
+        email: '',
+        xp: 100,
+        streak: 1,
+        lastActiveDate: new Date().toISOString().split('T')[0],
+        questionsSolved: 0,
+        quizzesCompleted: 0,
+        accuracy: 100,
+        rank: 'नयाँ प्रतियोगी',
+        level: 1,
+        targetExam: 'नेपाल राष्ट्र बैंक - सहायक (तह ४)'
+      });
     } catch {
-      return sanitizeUserProfile(INITIAL_USER);
+      return sanitizeUserProfile({
+        id: 'user_default',
+        name: 'परीक्षार्थी',
+        displayName: 'परीक्षार्थी',
+        email: '',
+        xp: 100,
+        streak: 1,
+        lastActiveDate: new Date().toISOString().split('T')[0],
+        questionsSolved: 0,
+        quizzesCompleted: 0,
+        accuracy: 100,
+        rank: 'नयाँ प्रतियोगी',
+        level: 1,
+        targetExam: 'नेपाल राष्ट्र बैंक - सहायक (तह ४)'
+      });
     }
   }
 

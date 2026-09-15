@@ -103,6 +103,22 @@ export const AppProvider: React.FC<{ children: React.ReactNode; initialUser?: Us
     }
   }, [initialUser]);
 
+  // Listen to profile updates across the app to update state immediately
+  useEffect(() => {
+    const handleProfileUpdated = (e: Event) => {
+      const customEvt = e as CustomEvent<UserProfile>;
+      if (customEvt.detail) {
+        setUserState(sanitizeUserProfile(customEvt.detail));
+      } else {
+        setUserState(StorageService.getUserProfile());
+      }
+    };
+    window.addEventListener('btn:profile-updated', handleProfileUpdated);
+    return () => {
+      window.removeEventListener('btn:profile-updated', handleProfileUpdated);
+    };
+  }, []);
+
   // Modals & Active Viewers
   const [activeNote, setActiveNote] = useState<StudyNote | null>(null);
   const [activePremiumNote, setActivePremiumNote] = useState<PremiumNote | null>(null);
@@ -193,7 +209,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode; initialUser?: Us
   // Open Admin with Security & PIN Check
   const openAdminWithSecurityCheck = useCallback(() => {
     if (!isUserAdmin(user?.email)) {
-      addToast('Unauthorized Access: यो सुविधा केवल प्रशासक (rishiramthapa3@gmail.com) का लागि मात्र हो।', 'error');
+      addToast(`Unauthorized Access: यो सुविधा केवल प्रशासक (${OFFICIAL_ADMIN_EMAIL}) का लागि मात्र हो।`, 'error');
       if (window.location.pathname.includes('/admin')) {
         window.history.replaceState(null, '', '/dashboard');
       }

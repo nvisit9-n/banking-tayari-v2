@@ -63,33 +63,48 @@ export function sanitizeNumber(
  * Sanitizes and validates an entire UserProfile object.
  */
 export function sanitizeUserProfile(profile: Partial<UserProfile> | null | undefined): UserProfile {
-  const safeId = profile?.id && typeof profile.id === 'string' ? sanitizeString(profile.id) : `user-${Date.now()}`;
-  const safeName = sanitizeString(profile?.name || 'विद्यार्थी');
+  const safeId = profile?.id && typeof profile.id === 'string' ? sanitizeString(profile.id) : (profile?.authUid ? sanitizeString(profile.authUid) : `user-${Date.now()}`);
   const safeEmail = sanitizeString(profile?.email || '');
+  const emailPrefix = safeEmail ? safeEmail.split('@')[0] : '';
+  const safeName = sanitizeString(profile?.name || profile?.displayName || emailPrefix || 'विद्यार्थी');
+  const safeDisplayName = sanitizeString(profile?.displayName || safeName || emailPrefix);
   const safePhone = sanitizeString(profile?.phone || '').replace(/[^\d+]/g, '');
   const safeProvince = sanitizeString(profile?.province || 'बागमती प्रदेश');
   const safeDistrict = sanitizeString(profile?.district || 'काठमाडौं');
   const safeTargetExam = sanitizeString(profile?.targetExam || 'नेपाल राष्ट्र बैंक - सहायक (तह ४)');
   const safeRank = sanitizeString(profile?.rank || 'तह ४: नयाँ प्रतियोगी (Aspirant)');
 
-  // Validate avatarUrl to prevent javascript: or malformed URLs
+  // Validate avatarUrl and photoURL to prevent javascript: or malformed URLs
+  let safePhotoURL = profile?.photoURL || profile?.avatarUrl;
+  if (typeof safePhotoURL !== 'string' || 
+      (!safePhotoURL.startsWith('http://') && 
+       !safePhotoURL.startsWith('https://') && 
+       !safePhotoURL.startsWith('data:image/'))) {
+    safePhotoURL = `https://ui-avatars.com/api/?name=${encodeURIComponent(safeDisplayName || 'User')}&background=0D8ABC&color=fff&size=256`;
+  }
+
   let safeAvatar = profile?.avatarUrl;
   if (typeof safeAvatar !== 'string' || 
       (!safeAvatar.startsWith('http://') && 
        !safeAvatar.startsWith('https://') && 
        !safeAvatar.startsWith('data:image/'))) {
-    safeAvatar = 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=256&q=80';
+    safeAvatar = safePhotoURL;
   }
 
   return {
     id: safeId,
+    authUid: profile?.authUid || safeId,
+    authProvider: profile?.authProvider || (profile?.isGoogleUser ? 'google' : 'email'),
+    isGoogleUser: Boolean(profile?.isGoogleUser || profile?.authProvider === 'google'),
     name: safeName || 'विद्यार्थी',
+    displayName: safeDisplayName,
     email: safeEmail,
     phone: safePhone,
     province: safeProvince,
     district: safeDistrict,
     targetExam: safeTargetExam,
     avatarUrl: safeAvatar,
+    photoURL: safePhotoURL,
     xp: sanitizeNumber(profile?.xp, 150, 0, 1000000),
     streak: sanitizeNumber(profile?.streak, 1, 0, 3650),
     lastActiveDate: sanitizeString(profile?.lastActiveDate || new Date().toISOString().split('T')[0]),
@@ -101,7 +116,9 @@ export function sanitizeUserProfile(profile: Partial<UserProfile> | null | undef
     totalQuestionsAnswered: sanitizeNumber(profile?.totalQuestionsAnswered, 0, 0, 100000),
     notesRead: sanitizeNumber(profile?.notesRead, 0, 0, 10000),
     registeredAt: sanitizeString(profile?.registeredAt || new Date().toISOString()),
-    isRegistered: Boolean(profile?.isRegistered ?? true)
+    isRegistered: Boolean(profile?.isRegistered ?? true),
+    profileCompletion: sanitizeNumber(profile?.profileCompletion, 50, 0, 100),
+    hasReceivedCompletionBonus: Boolean(profile?.hasReceivedCompletionBonus)
   };
 }
 

@@ -245,11 +245,13 @@ interface CentralUserRecord {
   authUid: string;
   id?: string;
   name: string;
+  displayName?: string;
   email: string;
   phone?: string;
   province?: string;
   district?: string;
   avatarUrl?: string;
+  photoURL?: string;
   xp: number;
   level: number;
   streak: number;

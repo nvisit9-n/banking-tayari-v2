@@ -34,6 +34,15 @@ export const UserProfileBanner: React.FC<UserProfileBannerProps> = ({
   const fileInputRef = useRef<HTMLInputElement | null>(null);
   const [isUploadingPhoto, setIsUploadingPhoto] = useState<boolean>(false);
 
+  // Dynamic user session bindings:
+  // - Display Name: user.displayName (or fallback to email prefix if null)
+  // - Email Address: user.email
+  // - Profile Picture: user.photoURL
+  const emailPrefix = user?.email ? user.email.split('@')[0] : '';
+  const displayName = user?.displayName || (user?.name && user.name !== 'विद्यार्थी' ? user.name : (emailPrefix || 'परीक्षार्थी'));
+  const userEmail = user?.email || '';
+  const photoURL = user?.photoURL || user?.avatarUrl || `https://ui-avatars.com/api/?name=${encodeURIComponent(displayName)}&background=0D8ABC&color=fff&size=256`;
+
   const userLevel = user.level ?? (Math.floor(user.xp / 500) + 1);
   const targetExam = user.targetExam || 'नेपाल राष्ट्र बैंक (NRB) - तह ४/५';
   const totalQuestions = user.totalQuestionsAnswered ?? user.questionsSolved ?? 0;
@@ -96,7 +105,7 @@ export const UserProfileBanner: React.FC<UserProfileBannerProps> = ({
           }
 
           // Save to database & storage immediately
-          await DbService.saveStudentProfile({ avatarUrl: finalPhotoUrl });
+          await DbService.saveStudentProfile({ avatarUrl: finalPhotoUrl, photoURL: finalPhotoUrl });
           refreshUser();
           addToast('तपाईंको प्रोफाइल फोटो सफलतापूर्वक अद्यावधिक भयो!', 'success');
         } catch {
@@ -163,10 +172,10 @@ export const UserProfileBanner: React.FC<UserProfileBannerProps> = ({
           {/* Avatar with Camera Overlay Icon - Perfect Circle */}
           <div className="relative shrink-0 group">
             <div className="w-20 h-20 md:w-22 md:h-22 rounded-full overflow-hidden border-2 border-white/30 shadow-md object-cover bg-white/10 flex items-center justify-center">
-              {user.avatarUrl ? (
+              {photoURL ? (
                 <img
-                  src={user.avatarUrl}
-                  alt={user.name || 'User'}
+                  src={photoURL}
+                  alt={displayName}
                   referrerPolicy="no-referrer"
                   className="w-full h-full rounded-full object-cover transition-transform duration-200 group-hover:scale-105"
                 />
@@ -204,7 +213,7 @@ export const UserProfileBanner: React.FC<UserProfileBannerProps> = ({
           <div className="space-y-1.5">
             <div className="flex flex-wrap items-center gap-2">
               <h1 className="text-xl sm:text-2xl font-black text-white tracking-tight">
-                {user.name ? `नमस्ते, ${user.name}! 👋` : 'नमस्ते, परीक्षार्थी! 👋'}
+                {displayName ? `नमस्ते, ${displayName}! 👋` : 'नमस्ते, परीक्षार्थी! 👋'}
               </h1>
             </div>
 
@@ -232,10 +241,10 @@ export const UserProfileBanner: React.FC<UserProfileBannerProps> = ({
 
             {/* Contact Information */}
             <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-slate-300 pt-0.5">
-              {user.email && (
+              {userEmail && (
                 <p className="flex items-center gap-1">
                   <Mail className="w-3.5 h-3.5 text-slate-400" />
-                  <span>{user.email}</span>
+                  <span>{userEmail}</span>
                 </p>
               )}
               {user.phone && (

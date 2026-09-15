@@ -55,6 +55,11 @@ export const ProfileScreen: React.FC = () => {
   // Dynamic Profile Completion calculation
   const profileStats = DbService.calculateProfileCompletion(user);
 
+  const emailPrefix = user?.email ? user.email.split('@')[0] : '';
+  const displayName = user?.displayName || (user?.name && user.name !== 'विद्यार्थी' ? user.name : (emailPrefix || 'परीक्षार्थी'));
+  const userEmail = user?.email || '';
+  const photoURL = user?.photoURL || user?.avatarUrl || `https://ui-avatars.com/api/?name=${encodeURIComponent(displayName)}&background=0D8ABC&color=fff&size=256`;
+
   return (
     <div className="space-y-8 pb-16">
       
@@ -66,8 +71,8 @@ export const ProfileScreen: React.FC = () => {
             <div className="relative group shrink-0">
               <div className="w-28 h-28 md:w-32 md:h-32 rounded-full border-4 border-blue-600/30 overflow-hidden shadow-xl flex items-center justify-center bg-blue-950 shrink-0 mx-auto">
                 <img
-                  src={user.avatarUrl}
-                  alt={user.name}
+                  src={photoURL}
+                  alt={displayName}
                   referrerPolicy="no-referrer"
                   className="w-full h-full rounded-full object-cover"
                 />
@@ -88,7 +93,7 @@ export const ProfileScreen: React.FC = () => {
             <div className="space-y-1 text-center sm:text-left">
               <div className="flex flex-wrap items-center justify-center sm:justify-start gap-2">
                 <h1 className="text-xl sm:text-2xl font-black tracking-tight text-white">
-                  {user.name}
+                  {displayName}
                 </h1>
                 <span className="px-2.5 py-0.5 rounded-full bg-white/20 text-[11px] font-bold">
                   {targetExam}
@@ -102,10 +107,12 @@ export const ProfileScreen: React.FC = () => {
               </div>
 
               <div className="flex flex-wrap items-center justify-center sm:justify-start gap-x-3 gap-y-1 text-xs text-blue-200">
-                <p className="flex items-center gap-1.5">
-                  <Mail className="w-3.5 h-3.5 text-blue-300" />
-                  <span>{user.email}</span>
-                </p>
+                {userEmail && (
+                  <p className="flex items-center gap-1.5">
+                    <Mail className="w-3.5 h-3.5 text-blue-300" />
+                    <span>{userEmail}</span>
+                  </p>
+                )}
                 {user.phone && (
                   <p className="flex items-center gap-1.5 font-mono">
                     <Phone className="w-3.5 h-3.5 text-blue-300" />

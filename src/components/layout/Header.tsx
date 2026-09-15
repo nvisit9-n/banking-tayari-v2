@@ -11,6 +11,7 @@ import {
   Edit3
 } from 'lucide-react';
 import { useApp } from '../../context/AppContext';
+import { isUserAdmin, OFFICIAL_ADMIN_EMAIL } from '../../utils/sanitizer';
 
 // =========================================================================
 // Official Banking Tayari Nepal Inline SVG Component
@@ -165,16 +166,21 @@ export const Header: React.FC = () => {
     isAdminAuthenticated
   } = useApp();
 
-  // 1. Visibility logic for the Admin button: ONLY when the specific admin is logged in
-  const isAdmin = Boolean(
-    user && 
-    user.email && 
-    (user.email === 'rishiramthapa3@gmail.com' || user.email.trim().toLowerCase() === 'rishiramthapa3@gmail.com')
-  );
+  // 1. Visibility logic for the Admin button: ONLY when the authorized admin is logged in
+  const isAdmin = Boolean(user && isUserAdmin(user.email));
 
   const unreadCount = typeof unreadNotificationsCount === 'number' 
     ? unreadNotificationsCount 
     : (notifications || []).filter(n => !n.read).length;
+
+  // Dynamic user session bindings:
+  // - Display Name: user.displayName (or fallback to email prefix if null)
+  // - Email Address: user.email
+  // - Profile Picture: user.photoURL (or avatarUrl / avatar generator)
+  const emailPrefix = user?.email ? user.email.split('@')[0] : '';
+  const displayName = user?.displayName || (user?.name && user.name !== 'विद्यार्थी' ? user.name : (emailPrefix || 'परीक्षार्थी'));
+  const userEmail = user?.email || '';
+  const photoURL = user?.photoURL || user?.avatarUrl || `https://ui-avatars.com/api/?name=${encodeURIComponent(displayName)}&background=0D8ABC&color=fff&size=256`;
 
   return (
     <header className="sticky top-0 z-30 bg-white/95 dark:bg-slate-900/95 backdrop-blur border-b border-slate-200 dark:border-slate-800 transition-colors">
@@ -293,7 +299,7 @@ export const Header: React.FC = () => {
                     ? 'bg-red-500/10 text-red-600 dark:text-red-400 border-red-300 dark:border-red-800/60 hover:bg-red-500/20'
                     : 'bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border-slate-200 dark:border-slate-700 hover:bg-slate-200 dark:hover:bg-slate-700'
                 }`}
-                title="प्रशासक प्यानल (rishiramthapa3@gmail.com)"
+                title={`प्रशासक प्यानल (${OFFICIAL_ADMIN_EMAIL})`}
               >
                 <ShieldCheck className="w-4 h-4 text-red-600 dark:text-red-400" />
                 <span>प्रशासक (PIN)</span>
@@ -311,21 +317,27 @@ export const Header: React.FC = () => {
               onClick={() => setIsProfileModalOpen(true)}
               id="header-profile-btn"
               className="flex items-center gap-2.5 p-1.5 rounded-xl hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors border-l pl-3 sm:pl-4 ml-1 sm:ml-2 border-slate-200 dark:border-slate-800 group text-left cursor-pointer"
-              title="विद्यार्थी प्रोफाइल सम्पादन तथा विवरण"
+              title={`${displayName} - प्रोफाइल सम्पादन तथा विवरण`}
             >
-              <div className="text-right hidden sm:block">
-                <p className="text-xs text-slate-700 dark:text-slate-300 font-semibold group-hover:text-blue-600 dark:group-hover:text-blue-400 transition">
-                  {user ? (user.name ? user.name.split(' ')[0] : 'परीक्षार्थी') : 'स्वागत छ'}
+              <div className="text-right hidden sm:block max-w-[140px]">
+                <p className="text-xs text-slate-800 dark:text-slate-200 font-bold group-hover:text-blue-600 dark:group-hover:text-blue-400 transition truncate" title={displayName}>
+                  {displayName}
                 </p>
-                <p className="text-[11px] text-slate-500 dark:text-slate-400 truncate max-w-[120px]">
-                  {user ? (user.targetExam?.split(' ')[0] || user.district || 'विद्यार्थी') : 'लगइन गर्नुहोस्'}
-                </p>
+                {userEmail ? (
+                  <p className="text-[10px] font-mono text-slate-500 dark:text-slate-400 truncate" title={userEmail}>
+                    {userEmail}
+                  </p>
+                ) : (
+                  <p className="text-[11px] text-slate-500 dark:text-slate-400 truncate">
+                    {user?.targetExam?.split(' ')[0] || user?.district || 'विद्यार्थी'}
+                  </p>
+                )}
               </div>
               
               <div className="relative">
                 <img 
-                  src={user?.avatarUrl || "https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=256&q=80"} 
-                  alt={user?.name || "User Profile"} 
+                  src={photoURL} 
+                  alt={displayName} 
                   referrerPolicy="no-referrer"
                   className="w-8 h-8 rounded-full border border-slate-300 dark:border-slate-700 object-cover shadow-sm transition-transform group-hover:scale-105"
                 />

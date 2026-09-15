@@ -279,12 +279,14 @@ export const StudentProfileModal: React.FC<StudentProfileModalProps> = ({
       const priorBonus = user.hasReceivedCompletionBonus;
       const updated = await DbService.saveStudentProfile({
         name: trimmedName,
+        displayName: trimmedName,
         email: email.trim(),
         phone: cleanPhone,
         province: selectedProvince,
         district: district,
         targetExam: targetExam,
         avatarUrl: avatarUrl,
+        photoURL: avatarUrl,
         isRegistered: true,
         isGoogleUser: isGoogleUser
       });

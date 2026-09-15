@@ -115,21 +115,23 @@ export const LOK_SEWA_UNIFIED_SYLLABUS_WEIGHTAGE = [
 ];
 
 export const INITIAL_USER = {
-  id: 'student-nepal-001',
-  name: 'सुमन अधिकारी',
-  email: 'suman.adhikari@example.com',
-  avatarUrl: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=200&q=80',
-  xp: 1420,
-  streak: 7,
-  lastActiveDate: '2026-09-04',
-  questionsSolved: 148,
-  quizzesCompleted: 19,
-  accuracy: 84,
-  rank: 'Level 4: Aspirant Pro',
-  level: 3,
-  targetExam: 'NRB Assistant / RBB Level 4',
-  totalQuestionsAnswered: 148,
-  notesRead: 26
+  id: 'guest-aspirant',
+  name: 'परीक्षार्थी',
+  displayName: 'परीक्षार्थी',
+  email: '',
+  avatarUrl: 'https://ui-avatars.com/api/?name=Student&background=0D8ABC&color=fff&size=256',
+  photoURL: 'https://ui-avatars.com/api/?name=Student&background=0D8ABC&color=fff&size=256',
+  xp: 100,
+  streak: 1,
+  lastActiveDate: new Date().toISOString().split('T')[0],
+  questionsSolved: 0,
+  quizzesCompleted: 0,
+  accuracy: 100,
+  rank: 'तह ४: नयाँ प्रतियोगी (Aspirant)',
+  level: 1,
+  targetExam: 'नेपाल राष्ट्र बैंक - सहायक (तह ४)',
+  totalQuestionsAnswered: 0,
+  notesRead: 0
 };
 
 export const MOCK_QUESTIONS: Question[] = [

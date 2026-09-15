@@ -25,11 +25,10 @@ function getValidStoredProfile(): UserProfile | null {
     if (
       parsed &&
       typeof parsed === 'object' &&
-      parsed.name &&
-      typeof parsed.name === 'string' &&
-      parsed.name.trim().length >= 2 &&
-      parsed.name.trim() !== 'विद्यार्थी' &&
-      ((parsed.email && parsed.email.trim().length > 0) || (parsed.phone && parsed.phone.trim().length > 0))
+      (
+        (parsed.email && typeof parsed.email === 'string' && parsed.email.includes('@')) ||
+        (parsed.phone && typeof parsed.phone === 'string' && parsed.phone.trim().length >= 7)
+      )
     ) {
       return sanitizeUserProfile(parsed);
     }
