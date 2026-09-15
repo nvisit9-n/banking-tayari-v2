@@ -112,9 +112,17 @@ export class DbService {
     const current = this.getStudentProfile();
     const targetUid = profileUpdates.authUid || profileUpdates.id || current.authUid || current.id || `uid_${Date.now()}`;
 
+    // If logging in as a different user or authenticating afresh, do not carry over obsolete identity from previous session
+    const isDifferentUser = Boolean(
+      profileUpdates.email && 
+      current?.email && 
+      profileUpdates.email.trim().toLowerCase() !== current.email.trim().toLowerCase()
+    );
+    const base = isDifferentUser ? {} : current;
+
     // Check completion before & after
     const priorCompletion = this.calculateProfileCompletion(current);
-    const draft = { ...current, ...profileUpdates, authUid: targetUid, id: targetUid };
+    const draft = { ...base, ...profileUpdates, authUid: targetUid, id: targetUid };
     const newCompletion = this.calculateProfileCompletion(draft);
 
     let xpBonusToAdd = 0;
