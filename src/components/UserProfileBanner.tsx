@@ -131,18 +131,14 @@ export const UserProfileBanner: React.FC<UserProfileBannerProps> = ({
   };
 
   return (
-    <div className="rounded-3xl bg-gradient-to-r from-slate-900 via-blue-950 to-indigo-900 shadow-xl relative overflow-hidden border border-blue-900/40 text-white p-6 sm:p-8">
+    <div className="rounded-2xl bg-[#0B2046] dark:bg-slate-900 shadow-md relative overflow-hidden border border-slate-800 text-white p-6">
       
-      {/* Ambient background glow circles */}
-      <div className="absolute top-0 right-0 -mr-16 -mt-16 w-64 h-64 bg-blue-500/10 rounded-full blur-3xl pointer-events-none" />
-      <div className="absolute bottom-0 left-1/3 -mb-16 w-56 h-56 bg-indigo-500/10 rounded-full blur-2xl pointer-events-none" />
-
       {/* Top Banner Row: Streak Badge & Cloud Sync Indicator */}
-      <div className="relative z-10 flex flex-wrap items-center justify-between gap-3 mb-5">
+      <div className="flex flex-wrap items-center justify-between gap-3 mb-5">
         
         {/* Streak Counter Badge */}
-        <div className="inline-flex items-center gap-2 bg-amber-500/15 text-amber-300 text-xs px-3.5 py-1.5 rounded-full font-bold border border-amber-500/30 backdrop-blur-sm shadow-sm">
-          <Flame className="w-4 h-4 text-amber-400 animate-pulse" />
+        <div className="inline-flex items-center gap-2 bg-amber-400/15 text-amber-300 text-xs px-3 py-1 rounded-full font-bold border border-amber-400/25 shadow-xs">
+          <Flame className="w-3.5 h-3.5 text-amber-400" />
           <span>{streakDays} दिने निरन्तर अध्ययन Streak सक्रिय छ</span>
         </div>
 
@@ -159,14 +155,14 @@ export const UserProfileBanner: React.FC<UserProfileBannerProps> = ({
       </div>
 
       {/* Main Profile Content: Avatar, Details & XP */}
-      <div className="relative z-10 flex flex-col lg:flex-row items-start lg:items-center justify-between gap-6">
+      <div className="flex flex-col lg:flex-row items-start lg:items-center justify-between gap-6">
         
         {/* Left: Avatar with Camera Overlay & Name/Details */}
         <div className="flex items-center gap-4 sm:gap-6">
           
           {/* Avatar with Camera Overlay Icon - Perfect Circle */}
           <div className="relative shrink-0 group">
-            <div className="w-20 h-20 md:w-24 md:h-24 rounded-full overflow-hidden border-4 border-white/20 shadow-xl object-cover backdrop-blur-md bg-white/10 flex items-center justify-center">
+            <div className="w-20 h-20 md:w-22 md:h-22 rounded-full overflow-hidden border-2 border-white/30 shadow-md object-cover bg-white/10 flex items-center justify-center">
               {user.avatarUrl ? (
                 <img
                   src={user.avatarUrl}
@@ -175,12 +171,12 @@ export const UserProfileBanner: React.FC<UserProfileBannerProps> = ({
                   className="w-full h-full rounded-full object-cover transition-transform duration-200 group-hover:scale-105"
                 />
               ) : (
-                <User className="w-10 h-10 md:w-12 md:h-12 text-white/80" />
+                <User className="w-10 h-10 md:w-11 md:h-11 text-white/80" />
               )}
             </div>
 
             {/* Level Badge Overlay (Top Left) */}
-            <span className="absolute -top-1 -left-1 px-2 py-0.5 rounded-full bg-amber-500 text-slate-950 font-black text-[10px] shadow-md uppercase tracking-wider">
+            <span className="absolute -top-1 -left-1 px-2 py-0.5 rounded-full bg-amber-500 text-slate-950 font-black text-[10px] shadow-sm uppercase tracking-wider">
               Lvl {userLevel}
             </span>
 
@@ -188,10 +184,10 @@ export const UserProfileBanner: React.FC<UserProfileBannerProps> = ({
             <button
               type="button"
               onClick={handleOpenEdit}
-              className="absolute -bottom-1 -right-1 rounded-full p-1.5 bg-red-600 border-2 border-white text-white shadow-md hover:bg-red-700 transition-transform hover:scale-110 cursor-pointer"
+              className="absolute -bottom-1 -right-1 rounded-full p-1.5 bg-[#DC2626] border-2 border-white text-white shadow-sm hover:bg-[#B91C1C] transition-transform hover:scale-110 cursor-pointer"
               title="फोटो परिवर्तन तथा काँटछाँट गर्नुहोस् (Edit & Crop Photo)"
             >
-              <Camera className="w-3.5 h-3.5 md:w-4 md:h-4" />
+              <Camera className="w-3.5 h-3.5" />
             </button>
 
             {/* Hidden Photo Upload Input */}
@@ -207,27 +203,27 @@ export const UserProfileBanner: React.FC<UserProfileBannerProps> = ({
           {/* Student Profile Identity Details */}
           <div className="space-y-1.5">
             <div className="flex flex-wrap items-center gap-2">
-              <h1 className="text-xl sm:text-2xl lg:text-3xl font-black text-white tracking-tight">
+              <h1 className="text-xl sm:text-2xl font-black text-white tracking-tight">
                 {user.name ? `नमस्ते, ${user.name}! 👋` : 'नमस्ते, परीक्षार्थी! 👋'}
               </h1>
             </div>
 
             {/* Target Exam, Province & District Badges */}
             <div className="flex flex-wrap items-center gap-2">
-              <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-xl bg-slate-800/80 text-slate-200 text-xs font-bold border border-slate-700">
+              <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-white/10 text-slate-200 text-xs font-bold border border-white/15">
                 <Building2 className="w-3.5 h-3.5 text-red-400" />
                 <span>{targetExam}</span>
               </span>
 
               {user.province && (
-                <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-xl bg-slate-800/80 text-slate-300 text-xs font-bold border border-slate-700">
+                <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-white/10 text-slate-300 text-xs font-bold border border-white/15">
                   <span className="text-xs">🏛️</span>
                   <span>{user.province}</span>
                 </span>
               )}
 
               {user.district && (
-                <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-xl bg-slate-800/80 text-slate-300 text-xs font-bold border border-slate-700">
+                <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-white/10 text-slate-300 text-xs font-bold border border-white/15">
                   <MapPin className="w-3.5 h-3.5 text-rose-400" />
                   <span>{user.district}</span>
                 </span>
@@ -252,8 +248,8 @@ export const UserProfileBanner: React.FC<UserProfileBannerProps> = ({
           </div>
         </div>
 
-        {/* Right: Subtle Dark Glassmorphic XP Bar & Study Streak Card */}
-        <div className="w-full lg:w-72 space-y-3 bg-black/25 backdrop-blur-md border border-white/10 rounded-2xl p-4 shadow-lg">
+        {/* Right: Clean XP Bar & Study Streak Card */}
+        <div className="w-full lg:w-72 space-y-3 bg-black/20 border border-white/15 rounded-xl p-4">
           <div className="flex items-center justify-between text-xs font-bold">
             <span className="text-white flex items-center gap-1">
               <Zap className="w-3.5 h-3.5 text-amber-400" />
@@ -265,9 +261,9 @@ export const UserProfileBanner: React.FC<UserProfileBannerProps> = ({
           </div>
 
           {/* XP Progress Bar */}
-          <div className="w-full h-2.5 bg-white/10 rounded-full overflow-hidden border border-white/10">
+          <div className="w-full h-2 bg-white/15 rounded-full overflow-hidden">
             <div 
-              className="h-full bg-gradient-to-r from-amber-400 to-red-500 rounded-full transition-all duration-500"
+              className="h-full bg-gradient-to-r from-amber-400 to-rose-500 rounded-full transition-all duration-500"
               style={{ width: `${xpProgressPercent}%` }}
             />
           </div>
@@ -282,7 +278,7 @@ export const UserProfileBanner: React.FC<UserProfileBannerProps> = ({
             type="button"
             id="dashboard-edit-profile-btn"
             onClick={handleOpenEdit}
-            className="w-full py-2 px-3 rounded-xl bg-white/10 hover:bg-white/20 text-white font-bold text-xs flex items-center justify-center gap-1.5 transition cursor-pointer shadow-sm border border-white/15 backdrop-blur-sm"
+            className="w-full py-2 px-3 rounded-lg bg-white/10 hover:bg-white/20 text-white font-bold text-xs flex items-center justify-center gap-1.5 transition cursor-pointer border border-white/15"
             title="प्रोफाइल सम्पादन गर्नुहोस् (Edit Profile)"
           >
             <Edit3 className="w-3.5 h-3.5" />
@@ -292,7 +288,7 @@ export const UserProfileBanner: React.FC<UserProfileBannerProps> = ({
       </div>
 
       {/* Quick Action Navigation Buttons */}
-      <div className="relative z-10 mt-6 pt-5 border-t border-slate-800 flex flex-wrap items-center gap-3">
+      <div className="mt-6 pt-5 border-t border-white/15 flex flex-wrap items-center gap-3">
         {/* Primary CTA button styled in Crimson Red */}
         <button
           type="button"

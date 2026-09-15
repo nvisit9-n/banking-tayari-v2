@@ -305,28 +305,19 @@ export const Header: React.FC = () => {
               </button>
             )}
 
-            {/* Edit Profile Button */}
-            <button
+            {/* Header Profile Section & Trigger */}
+            <button 
+              type="button"
               onClick={() => setIsProfileModalOpen(true)}
-              id="header-edit-profile-btn"
-              className="flex items-center gap-1.5 px-2.5 py-1.5 text-xs font-semibold rounded-xl bg-blue-50 dark:bg-blue-950/40 text-blue-700 dark:text-blue-300 border border-blue-200 dark:border-blue-800 hover:bg-blue-100 dark:hover:bg-blue-900/60 transition cursor-pointer"
-              title="प्रोफाइल सम्पादन गर्नुहोस् (Edit Profile)"
-            >
-              <Edit3 className="w-3.5 h-3.5 text-blue-600 dark:text-blue-400" />
-              <span className="hidden md:inline">प्रोफाइल सम्पादन</span>
-            </button>
-
-            {/* Header Profile Section */}
-            <div 
-              onClick={() => setIsProfileModalOpen(true)}
-              className="flex items-center gap-2.5 cursor-pointer hover:opacity-85 transition-opacity border-l pl-3 sm:pl-4 ml-1 sm:ml-2 border-slate-200 dark:border-slate-800 group"
+              id="header-profile-btn"
+              className="flex items-center gap-2.5 p-1.5 rounded-xl hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors border-l pl-3 sm:pl-4 ml-1 sm:ml-2 border-slate-200 dark:border-slate-800 group text-left cursor-pointer"
               title="विद्यार्थी प्रोफाइल सम्पादन तथा विवरण"
             >
               <div className="text-right hidden sm:block">
-                <p className="text-xs text-gray-500 dark:text-slate-400 font-medium group-hover:text-blue-600 dark:group-hover:text-blue-400 transition">
-                  {user ? `नमस्ते, ${user.name.split(' ')[0]}` : 'स्वागत छ'}
+                <p className="text-xs text-slate-700 dark:text-slate-300 font-semibold group-hover:text-blue-600 dark:group-hover:text-blue-400 transition">
+                  {user ? (user.name ? user.name.split(' ')[0] : 'परीक्षार्थी') : 'स्वागत छ'}
                 </p>
-                <p className="text-[11px] text-blue-600 dark:text-blue-400 font-semibold truncate max-w-[120px]">
+                <p className="text-[11px] text-slate-500 dark:text-slate-400 truncate max-w-[120px]">
                   {user ? (user.targetExam?.split(' ')[0] || user.district || 'विद्यार्थी') : 'लगइन गर्नुहोस्'}
                 </p>
               </div>
@@ -336,13 +327,13 @@ export const Header: React.FC = () => {
                   src={user?.avatarUrl || "https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=256&q=80"} 
                   alt={user?.name || "User Profile"} 
                   referrerPolicy="no-referrer"
-                  className="w-9 h-9 rounded-full border-2 border-blue-500 object-cover shadow-sm transition-transform group-hover:scale-105"
+                  className="w-8 h-8 rounded-full border border-slate-300 dark:border-slate-700 object-cover shadow-sm transition-transform group-hover:scale-105"
                 />
                 {user && (
-                  <span className="absolute bottom-0 right-0 w-2.5 h-2.5 bg-emerald-500 border-2 border-white dark:border-slate-900 rounded-full"></span>
+                  <span className="absolute bottom-0 right-0 w-2 h-2 bg-emerald-500 border-2 border-white dark:border-slate-900 rounded-full"></span>
                 )}
               </div>
-            </div>
+            </button>
 
 
           </div>

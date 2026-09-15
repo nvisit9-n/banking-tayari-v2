@@ -164,13 +164,13 @@ export const HomeScreen: React.FC = () => {
 
       {/* Gamified Profile Completion Reminder Banner (Non-blocking) */}
       {!profileStats.isComplete && (
-        <div className="p-4 sm:p-5 rounded-3xl bg-gradient-to-r from-amber-500/10 via-blue-500/10 to-indigo-500/10 border border-amber-300/60 dark:border-amber-700/50 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 shadow-sm">
+        <div className="p-4 sm:p-5 rounded-2xl bg-amber-50/80 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-800/60 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 shadow-xs">
           <div className="space-y-1.5 flex-1 min-w-0">
             <div className="flex items-center gap-2">
               <span className="px-2.5 py-0.5 rounded-full bg-amber-500 text-slate-950 font-black text-xs">
                 {profileStats.percentage}% पूर्ण
               </span>
-              <h4 className="text-sm font-extrabold text-slate-900 dark:text-white">
+              <h4 className="text-sm font-bold text-slate-900 dark:text-white">
                 प्रोफाइल पूर्ण गरी +५० बोनस XP प्राप्त गर्नुहोस्!
               </h4>
             </div>
@@ -178,9 +178,9 @@ export const HomeScreen: React.FC = () => {
               आफ्नो लक्षित परीक्षा, प्रदेश र जिल्ला चयन गरी आफ्नो तयारीलाई व्यक्तिगत (Personalized) बनाउनुहोस्।
             </p>
             {/* Progress line */}
-            <div className="w-full max-w-md bg-slate-200 dark:bg-slate-700 h-2 rounded-full overflow-hidden mt-1">
+            <div className="w-full max-w-md bg-amber-200/60 dark:bg-slate-700 h-1.5 rounded-full overflow-hidden mt-1">
               <div 
-                className="h-full bg-gradient-to-r from-amber-500 to-blue-600 rounded-full transition-all duration-500"
+                className="h-full bg-amber-500 rounded-full transition-all duration-500"
                 style={{ width: `${profileStats.percentage}%` }}
               />
             </div>
@@ -190,9 +190,9 @@ export const HomeScreen: React.FC = () => {
             <button
               type="button"
               onClick={() => setIsProfileModalOpen(true)}
-              className="w-full sm:w-auto px-4 py-2 rounded-2xl bg-[#2563EB] hover:bg-blue-700 text-white font-bold text-xs shadow-md transition flex items-center justify-center gap-1.5 cursor-pointer active:scale-95"
+              className="w-full sm:w-auto px-4 py-2 rounded-xl bg-[#0B2046] hover:bg-slate-800 text-white font-bold text-xs shadow-xs transition flex items-center justify-center gap-1.5 cursor-pointer active:scale-95"
             >
-              <Zap className="w-3.5 h-3.5 fill-current text-amber-300" />
+              <Zap className="w-3.5 h-3.5 fill-current text-amber-400" />
               <span>अहिले विवरण भर्नुहोस् (+५० XP)</span>
             </button>
           </div>
@@ -200,7 +200,7 @@ export const HomeScreen: React.FC = () => {
       )}
 
       {/* Dynamic Personalized Feed Based on Target Exam */}
-      <div className="p-5 sm:p-6 rounded-3xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-sm space-y-4">
+      <div className="p-5 sm:p-6 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-xs space-y-4">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-slate-100 dark:border-slate-800 pb-3">
           <div className="flex items-center gap-2.5">
             <div className="p-2 rounded-xl bg-blue-50 dark:bg-blue-950/60 text-[#2563EB] dark:text-blue-400">
@@ -211,7 +211,7 @@ export const HomeScreen: React.FC = () => {
                 <h3 className="text-base font-extrabold text-slate-900 dark:text-white">
                   {tailoredFeed.title}
                 </h3>
-                <span className="px-2 py-0.5 rounded-full bg-blue-100 dark:bg-blue-900/60 text-[#2563EB] dark:text-blue-300 text-[10px] font-bold">
+                <span className="px-2 py-0.5 rounded-full bg-blue-50 dark:bg-blue-900/40 text-[#2563EB] dark:text-blue-300 text-[10px] font-bold border border-blue-200 dark:border-blue-800">
                   {targetExam}
                 </span>
               </div>
@@ -224,7 +224,7 @@ export const HomeScreen: React.FC = () => {
           <div className="flex items-center gap-2">
             <button
               onClick={() => setActiveTab('leaderboard')}
-              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-amber-50 dark:bg-amber-950/40 text-amber-700 dark:text-amber-300 border border-amber-200 dark:border-amber-800 text-xs font-bold hover:bg-amber-100 transition cursor-pointer"
+              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-amber-50 dark:bg-amber-950/40 text-amber-700 dark:text-amber-300 border border-amber-200 dark:border-amber-800 text-xs font-bold hover:bg-amber-100 dark:hover:bg-amber-900/60 transition cursor-pointer"
             >
               <Trophy className="w-3.5 h-3.5 text-amber-600" />
               <span>प्रदेश वरियता (Leaderboard)</span>
@@ -238,7 +238,7 @@ export const HomeScreen: React.FC = () => {
             <div 
               key={idx}
               onClick={() => setActiveTab('free-notes')}
-              className="p-3 rounded-2xl bg-slate-50 dark:bg-slate-800/40 border border-slate-200/80 dark:border-slate-800 flex items-center justify-between hover:border-blue-400 cursor-pointer transition"
+              className="p-3 rounded-xl bg-slate-50 dark:bg-slate-800/40 border border-slate-200/80 dark:border-slate-800 flex items-center justify-between hover:border-blue-400 dark:hover:border-blue-500 cursor-pointer transition"
             >
               <div className="flex items-center gap-2.5 min-w-0">
                 <FileCheck2 className="w-4 h-4 text-[#2563EB] shrink-0" />
@@ -257,112 +257,115 @@ export const HomeScreen: React.FC = () => {
       {/* Quick Access & Sangathit Sastha Pre-Test */}
       <QuickAccess />
 
-      {/* Dual Column Section: Challenge & Learning */}
+      {/* Dual Column Section: Flattened Learning & Resource Widgets */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         
-        {/* Left 2 Cols: Today's Challenge & Continue Learning */}
+        {/* Left 2 Cols: Continue Learning (Flattened list design, no nested cards) */}
         <div className="lg:col-span-2 space-y-6 min-w-0">
           
-          {/* Today's Challenge Card */}
-          <div className="bg-royal-gradient border border-blue-400/30 rounded-3xl p-6 text-white flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 relative overflow-hidden shadow-xl shadow-soft-blue">
-            <div className="relative z-10 space-y-3">
-              <p className="text-amber-300 text-xs sm:text-sm font-bold uppercase tracking-wider">Today's Challenge</p>
-              <h3 className="text-xl sm:text-2xl font-black text-white">आजको १० प्रश्न Challenge!</h3>
-              <div className="flex flex-wrap items-center gap-3 text-xs text-blue-100">
-                <span className="bg-white/15 border border-white/25 px-2.5 py-1 rounded-lg">⏱️ ५ मिनेट</span>
-                <span className="bg-white/15 border border-white/25 px-2.5 py-1 rounded-lg">⭐ +८० XP</span>
-                <span className="bg-white/15 border border-white/25 px-2.5 py-1 rounded-lg">कठिनाई: मध्यम</span>
-              </div>
-            </div>
-            
-            <button 
-              onClick={handleStartTodayChallenge}
-              className="bg-[#DC2626] hover:bg-[#B91C1C] text-white px-6 py-3 rounded-2xl font-black shadow-lg shadow-blue-950/40 transition-all z-10 shrink-0 text-sm active:scale-95 cursor-pointer"
-            >
-              Start Quiz
-            </button>
-            <div className="absolute -right-8 -bottom-8 w-48 h-48 bg-blue-300/20 rounded-full pointer-events-none"></div>
-          </div>
-
           {/* Continue Learning Card */}
-          <div className="bg-white dark:bg-slate-900 rounded-3xl border border-slate-200 dark:border-slate-800 p-6 shadow-sm">
-            <div className="flex justify-between items-center mb-4">
-              <h3 className="font-bold text-slate-800 dark:text-white">भर्खरै पढिएको (Continue Learning)</h3>
-              <span 
+          <div className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 p-5 shadow-xs">
+            <div className="flex justify-between items-center mb-4 pb-2 border-b border-slate-100 dark:border-slate-800">
+              <div className="flex items-center gap-2">
+                <BookOpen className="w-4 h-4 text-blue-600 dark:text-blue-400" />
+                <h3 className="font-bold text-slate-800 dark:text-white text-sm">
+                  भर्खरै पढिएको (Continue Learning)
+                </h3>
+              </div>
+              <button 
+                type="button"
                 onClick={() => setActiveTab('courses')}
-                className="text-blue-600 dark:text-blue-400 text-xs font-bold cursor-pointer hover:underline"
+                className="text-blue-600 dark:text-blue-400 text-xs font-bold hover:underline cursor-pointer"
               >
-                View All
-              </span>
+                सबै विषय हेर्नुहोस् &rarr;
+              </button>
             </div>
-            <div className="space-y-3">
-              <div className="flex items-center p-4 bg-emerald-50/50 dark:bg-emerald-950/20 rounded-2xl border border-emerald-100 dark:border-emerald-900/40 gap-4">
-                <div className="w-10 h-10 bg-emerald-100 dark:bg-emerald-900/50 text-emerald-700 dark:text-emerald-300 rounded-lg flex items-center justify-center text-xl shadow-sm shrink-0">
-                  🏛️
-                </div>
-                <div className="flex-1 min-w-0">
-                  <div className="flex items-center gap-1.5">
-                    <span className="px-1.5 py-0.5 text-[9px] font-extrabold bg-emerald-600 text-white rounded">Master Chapter</span>
-                    <h4 className="text-sm font-bold text-slate-800 dark:text-white truncate">
-                      बैंकिङ विकासक्रम र इतिहास (Banking History)
-                    </h4>
+
+            <div className="divide-y divide-slate-100 dark:divide-slate-800">
+              {/* Item 1 */}
+              <div className="py-3 flex items-center justify-between gap-4 hover:bg-slate-50 dark:hover:bg-slate-800/40 px-2 rounded-xl transition-colors">
+                <div className="flex items-center gap-3 min-w-0">
+                  <div className="w-9 h-9 rounded-lg bg-emerald-50 dark:bg-emerald-950/50 text-emerald-600 dark:text-emerald-400 flex items-center justify-center text-base shrink-0">
+                    🏛️
                   </div>
-                  <div className="flex items-center mt-1.5">
-                    <div className="flex-1 h-1.5 bg-slate-200 dark:bg-slate-700 rounded-full overflow-hidden mr-3">
-                      <div className="h-full bg-emerald-500 rounded-full w-[85%]"></div>
+                  <div className="min-w-0">
+                    <div className="flex items-center gap-1.5">
+                      <span className="px-1.5 py-0.2 text-[9px] font-black bg-emerald-600 text-white rounded">
+                        Master
+                      </span>
+                      <h4 className="text-xs sm:text-sm font-bold text-slate-800 dark:text-white truncate">
+                        बैंकिङ विकासक्रम र इतिहास (Banking History)
+                      </h4>
                     </div>
-                    <span className="text-[10px] font-bold text-slate-500 dark:text-slate-400">८५%</span>
+                    <div className="flex items-center gap-2 mt-1">
+                      <div className="w-24 sm:w-32 h-1.5 bg-slate-200 dark:bg-slate-700 rounded-full overflow-hidden">
+                        <div className="h-full bg-emerald-500 rounded-full w-[85%]"></div>
+                      </div>
+                      <span className="text-[10px] font-bold text-slate-500 dark:text-slate-400">८५%</span>
+                    </div>
                   </div>
                 </div>
+
                 <button 
+                  type="button"
                   onClick={() => openNoteReader('note-banking-history')}
-                  className="px-4 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold rounded-lg transition-colors shrink-0"
+                  className="px-3.5 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold rounded-lg transition-colors shrink-0 cursor-pointer"
                 >
                   Read Note
                 </button>
               </div>
 
-              <div className="flex items-center p-4 bg-slate-50 dark:bg-slate-800/50 rounded-2xl border border-slate-100 dark:border-slate-800 gap-4">
-                <div className="w-10 h-10 bg-white dark:bg-slate-900 rounded-lg flex items-center justify-center text-xl shadow-sm shrink-0">
-                  👔
-                </div>
-                <div className="flex-1 min-w-0">
-                  <h4 className="text-sm font-bold text-slate-800 dark:text-white truncate">
-                    Public Management (सार्वजनिक व्यवस्थापन)
-                  </h4>
-                  <div className="flex items-center mt-1.5">
-                    <div className="flex-1 h-1.5 bg-slate-200 dark:bg-slate-700 rounded-full overflow-hidden mr-3">
-                      <div className="h-full bg-blue-500 rounded-full w-[65%]"></div>
+              {/* Item 2 */}
+              <div className="py-3 flex items-center justify-between gap-4 hover:bg-slate-50 dark:hover:bg-slate-800/40 px-2 rounded-xl transition-colors">
+                <div className="flex items-center gap-3 min-w-0">
+                  <div className="w-9 h-9 rounded-lg bg-blue-50 dark:bg-blue-950/50 text-blue-600 dark:text-blue-400 flex items-center justify-center text-base shrink-0">
+                    👔
+                  </div>
+                  <div className="min-w-0">
+                    <h4 className="text-xs sm:text-sm font-bold text-slate-800 dark:text-white truncate">
+                      Public Management (सार्वजनिक व्यवस्थापन)
+                    </h4>
+                    <div className="flex items-center gap-2 mt-1">
+                      <div className="w-24 sm:w-32 h-1.5 bg-slate-200 dark:bg-slate-700 rounded-full overflow-hidden">
+                        <div className="h-full bg-blue-500 rounded-full w-[65%]"></div>
+                      </div>
+                      <span className="text-[10px] font-bold text-slate-500 dark:text-slate-400">६५%</span>
                     </div>
-                    <span className="text-[10px] font-bold text-slate-500 dark:text-slate-400">६५%</span>
                   </div>
                 </div>
+
                 <button 
+                  type="button"
                   onClick={() => openNoteReader('note-reengineering')}
-                  className="px-4 py-1.5 bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold rounded-lg transition-colors shrink-0"
+                  className="px-3.5 py-1.5 bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold rounded-lg transition-colors shrink-0 cursor-pointer"
                 >
                   Continue
                 </button>
               </div>
 
-              <div className="flex items-center p-4 bg-slate-50 dark:bg-slate-800/50 rounded-2xl border border-slate-100 dark:border-slate-800 gap-4">
-                <div className="w-10 h-10 bg-white dark:bg-slate-900 rounded-lg flex items-center justify-center text-xl shadow-sm shrink-0">
-                  ⚖️
-                </div>
-                <div className="flex-1 min-w-0">
-                  <h4 className="text-sm font-bold text-slate-800 dark:text-white truncate">
-                    Banking Laws & NRB Act (बैंकिंग ऐन-नियम)
-                  </h4>
-                  <div className="flex items-center mt-1.5">
-                    <div className="flex-1 h-1.5 bg-slate-200 dark:bg-slate-700 rounded-full overflow-hidden mr-3">
-                      <div className="h-full bg-green-500 rounded-full w-[30%]"></div>
+              {/* Item 3 */}
+              <div className="py-3 flex items-center justify-between gap-4 hover:bg-slate-50 dark:hover:bg-slate-800/40 px-2 rounded-xl transition-colors">
+                <div className="flex items-center gap-3 min-w-0">
+                  <div className="w-9 h-9 rounded-lg bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 flex items-center justify-center text-base shrink-0">
+                    ⚖️
+                  </div>
+                  <div className="min-w-0">
+                    <h4 className="text-xs sm:text-sm font-bold text-slate-800 dark:text-white truncate">
+                      Banking Laws & NRB Act (बैंकिंग ऐन-नियम)
+                    </h4>
+                    <div className="flex items-center gap-2 mt-1">
+                      <div className="w-24 sm:w-32 h-1.5 bg-slate-200 dark:bg-slate-700 rounded-full overflow-hidden">
+                        <div className="h-full bg-emerald-500 rounded-full w-[30%]"></div>
+                      </div>
+                      <span className="text-[10px] font-bold text-slate-500 dark:text-slate-400">३०%</span>
                     </div>
-                    <span className="text-[10px] font-bold text-slate-500 dark:text-slate-400">३०%</span>
                   </div>
                 </div>
+
                 <button 
+                  type="button"
                   onClick={() => setActiveTab('courses')}
-                  className="px-4 py-1.5 bg-slate-200 dark:bg-slate-700 hover:bg-slate-300 dark:hover:bg-slate-600 text-slate-700 dark:text-slate-200 text-xs font-bold rounded-lg transition-colors shrink-0"
+                  className="px-3.5 py-1.5 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 text-xs font-bold rounded-lg transition-colors shrink-0 cursor-pointer"
                 >
                   Resume
                 </button>
@@ -372,49 +375,53 @@ export const HomeScreen: React.FC = () => {
 
         </div>
 
-        {/* Right Col: Premium Notes Widget & Current Affairs Snippet */}
+        {/* Right Col: Premium Notes Widget & Current Affairs Snippet (Clean flattened cards) */}
         <div className="space-y-6 flex flex-col min-w-0">
           
-          {/* Premium Notes Widget */}
-          <div className="bg-amber-50 dark:bg-amber-950/20 rounded-3xl border border-amber-100 dark:border-amber-900/40 p-5 shadow-sm">
-            <div className="flex items-center justify-between mb-4">
-              <h3 className="text-sm font-bold text-amber-900 dark:text-amber-200">Premium Notes 🔒</h3>
-              <span className="bg-amber-200 dark:bg-amber-900/60 text-amber-800 dark:text-amber-200 text-[9px] px-1.5 py-0.5 rounded font-bold uppercase">
+          {/* Premium Notes Widget - Unified Card */}
+          <div className="bg-white dark:bg-slate-900 rounded-2xl border border-amber-200/80 dark:border-amber-900/40 p-5 shadow-xs">
+            <div className="flex items-center justify-between mb-3">
+              <h3 className="text-sm font-bold text-slate-900 dark:text-white flex items-center gap-1.5">
+                <Sparkles className="w-4 h-4 text-amber-500" />
+                <span>प्रिमियम नोट्स (Premium)</span>
+              </h3>
+              <span className="bg-amber-100 dark:bg-amber-900/60 text-amber-800 dark:text-amber-200 text-[10px] px-2 py-0.5 rounded font-bold uppercase">
                 Hot
               </span>
             </div>
             
             <div 
               onClick={() => openPremiumDetail(MOCK_PREMIUM_NOTES[0])}
-              className="bg-white dark:bg-slate-900 p-3 rounded-2xl shadow-sm mb-3 relative group cursor-pointer border border-amber-100/60 dark:border-amber-900/30 hover:border-amber-300 transition-all"
+              className="p-3 rounded-xl bg-amber-50/50 dark:bg-amber-950/20 border border-amber-100 dark:border-amber-900/30 hover:border-amber-300 transition-all cursor-pointer group"
             >
               <div className="flex space-x-3">
-                <div className="w-16 h-20 bg-amber-100 dark:bg-amber-900/40 rounded-lg flex items-center justify-center text-2xl shadow-inner shrink-0">
+                <div className="w-14 h-16 bg-amber-100 dark:bg-amber-900/40 rounded-lg flex items-center justify-center text-xl shadow-2xs shrink-0">
                   📄
                 </div>
                 <div className="flex-1 min-w-0">
-                  <h4 className="text-[11px] font-bold leading-tight text-slate-800 dark:text-white truncate">
+                  <h4 className="text-xs font-bold leading-tight text-slate-800 dark:text-white truncate group-hover:text-amber-700 dark:group-hover:text-amber-300 transition">
                     {MOCK_PREMIUM_NOTES[0].title}
                   </h4>
-                  <p className="text-[10px] text-slate-500 mt-1">
-                    {MOCK_PREMIUM_NOTES[0].pageCount || 120} पृष्ठहरू • 📄 PDF
+                  <p className="text-[10px] text-slate-500 dark:text-slate-400 mt-1">
+                    {MOCK_PREMIUM_NOTES[0].pageCount || 120} पृष्ठहरू • PDF
                   </p>
-                  <div className="flex items-center mt-2">
-                    <span className="text-xs font-bold text-slate-800 dark:text-white">
+                  <div className="flex items-center mt-1.5">
+                    <span className="text-xs font-bold text-slate-900 dark:text-white">
                       Rs. {MOCK_PREMIUM_NOTES[0].discountPrice || 149}
                     </span>
-                    <span className="text-[9px] text-slate-400 line-through ml-2">
+                    <span className="text-[10px] text-slate-400 line-through ml-2">
                       Rs. {MOCK_PREMIUM_NOTES[0].originalPrice || 299}
                     </span>
                   </div>
                 </div>
               </div>
               <button 
+                type="button"
                 onClick={(e) => {
                   e.stopPropagation();
                   openPremiumDetail(MOCK_PREMIUM_NOTES[0]);
                 }}
-                className="mt-2 w-full py-2 bg-[#DC2626] hover:bg-[#B91C1C] text-white text-[11px] font-bold rounded-xl transition-all shadow-sm cursor-pointer active:scale-95"
+                className="mt-3 w-full py-2 bg-[#DC2626] hover:bg-[#B91C1C] text-white text-xs font-bold rounded-lg transition-all shadow-xs cursor-pointer active:scale-95"
               >
                 Buy Now
               </button>
@@ -422,16 +429,19 @@ export const HomeScreen: React.FC = () => {
 
             <p 
               onClick={() => setActiveTab('premium')}
-              className="text-center text-[10px] text-amber-600 dark:text-amber-400 font-semibold cursor-pointer hover:underline"
+              className="mt-3 text-center text-xs text-amber-700 dark:text-amber-400 font-semibold cursor-pointer hover:underline"
             >
-              View All Marketplace Items
+              सबै प्रिमियम सामग्री हेर्नुहोस् &rarr;
             </p>
           </div>
 
           {/* Current Affairs Widget */}
-          <div className="bg-white dark:bg-slate-900 rounded-3xl border border-slate-200 dark:border-slate-800 p-5 flex-1 overflow-hidden flex flex-col shadow-sm">
-            <h3 className="font-bold text-slate-800 dark:text-white mb-4">समसामयिक (Current Affairs)</h3>
-            <div className="space-y-4 overflow-y-auto pr-1 flex-1">
+          <div className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 p-5 flex-1 overflow-hidden flex flex-col shadow-xs">
+            <h3 className="font-bold text-slate-800 dark:text-white mb-3 text-sm flex items-center gap-1.5">
+              <Newspaper className="w-4 h-4 text-blue-600 dark:text-blue-400" />
+              <span>समसामयिक (Current Affairs)</span>
+            </h3>
+            <div className="space-y-3 overflow-y-auto pr-1 flex-1">
               {MOCK_CURRENT_AFFAIRS.slice(0, 3).map((affair, idx) => (
                 <div 
                   key={affair.id}
@@ -447,10 +457,10 @@ export const HomeScreen: React.FC = () => {
                   }`}>
                     {affair.category} • {affair.date}
                   </span>
-                  <h4 className="text-[11px] font-bold leading-tight mt-0.5 text-slate-800 dark:text-white group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors line-clamp-1">
+                  <h4 className="text-xs font-bold leading-tight mt-0.5 text-slate-800 dark:text-white group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors line-clamp-1">
                     {affair.title}
                   </h4>
-                  <p className="text-[10px] text-slate-500 line-clamp-1 mt-1">
+                  <p className="text-[11px] text-slate-500 line-clamp-1 mt-0.5">
                     {affair.summary}
                   </p>
                 </div>
@@ -458,10 +468,11 @@ export const HomeScreen: React.FC = () => {
             </div>
 
             <button 
+              type="button"
               onClick={() => setActiveTab('current-affairs')}
-              className="mt-4 w-full py-2 border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 text-[10px] font-bold rounded-xl hover:bg-slate-50 dark:hover:bg-slate-800 transition-all"
+              className="mt-4 w-full py-2 border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 text-xs font-bold rounded-lg hover:bg-slate-50 dark:hover:bg-slate-800 transition-all cursor-pointer"
             >
-              Read More News
+              सबै समाचार हेर्नुहोस् &rarr;
             </button>
           </div>
 
@@ -497,9 +508,9 @@ export const HomeScreen: React.FC = () => {
               <div
                 key={i}
                 onClick={() => setActiveTab('courses')}
-                className="p-3.5 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 hover:border-blue-500 dark:hover:border-blue-500 cursor-pointer transition-all hover:-translate-y-0.5 shadow-sm flex items-center gap-3"
+                className="p-3 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 hover:border-blue-500 dark:hover:border-blue-500 cursor-pointer transition-all shadow-xs flex items-center gap-3"
               >
-                <div className="p-2 rounded-xl bg-blue-50 dark:bg-blue-950/40 text-blue-700 dark:text-blue-400">
+                <div className="p-2 rounded-lg bg-blue-50 dark:bg-blue-950/40 text-blue-700 dark:text-blue-400">
                   <Icon className="w-4 h-4" />
                 </div>
                 <div className="min-w-0">
@@ -523,7 +534,7 @@ export const HomeScreen: React.FC = () => {
       />
 
       {/* Premium Notes Teaser Banner */}
-      <section className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-[#0F172A] via-slate-900 to-[#1E293B] text-white p-6 sm:p-8 border border-slate-800 shadow-xl">
+      <section className="relative overflow-hidden rounded-2xl bg-[#0B2046] dark:bg-slate-900 text-white p-6 sm:p-7 border border-slate-800 shadow-md">
         <div className="relative z-10 flex flex-col md:flex-row items-start md:items-center justify-between gap-6">
           <div className="max-w-xl space-y-2">
             <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-red-500/20 text-red-300 text-xs font-bold border border-red-500/30">
