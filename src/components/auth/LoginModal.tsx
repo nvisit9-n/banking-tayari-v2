@@ -4,11 +4,7 @@ import {
   KeyRound, 
   ArrowRight, 
   User, 
-  ArrowLeft,
-  CheckCircle2,
-  X,
-  ExternalLink,
-  Lock
+  ArrowLeft
 } from 'lucide-react';
 import { UserProfile } from '../../types';
 import { DbService } from '../../services/dbService';
@@ -21,6 +17,28 @@ export interface LoginModalProps {
   setIsLoggedIn?: (loggedIn: boolean) => void;
 }
 
+/**
+ * Parses JWT token payload without external libraries
+ */
+function parseJwtPayload(token: string): any {
+  try {
+    const parts = token.split('.');
+    if (parts.length < 2) return null;
+    const base64Url = parts[1];
+    const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
+    const jsonPayload = decodeURIComponent(
+      atob(base64)
+        .split('')
+        .map(c => '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2))
+        .join('')
+    );
+    return JSON.parse(jsonPayload);
+  } catch (err) {
+    console.warn('Failed to parse JWT payload', err);
+    return null;
+  }
+}
+
 export const LoginModal: React.FC<LoginModalProps> = ({
   isOpen = true,
   onSuccess,
@@ -31,23 +49,11 @@ export const LoginModal: React.FC<LoginModalProps> = ({
   const [isSigningIn, setIsSigningIn] = useState<boolean>(false);
   const [error, setError] = useState<string>('');
 
-  // Google OAuth Popup Provider state
-  const [isOAuthPopupOpen, setIsOAuthPopupOpen] = useState<boolean>(false);
-  const [customGoogleEmail, setCustomGoogleEmail] = useState<string>('');
-  const [showCustomGoogleInput, setShowCustomGoogleInput] = useState<boolean>(false);
-
   // Email/Password state
   const [email, setEmail] = useState<string>('');
   const [password, setPassword] = useState<string>('');
   const [fullName, setFullName] = useState<string>('');
   const [isRegisterMode, setIsRegisterMode] = useState<boolean>(false);
-
-  // Active Google User Profile from authentication context
-  const defaultGoogleAccount = {
-    displayName: 'Rishi Ram Thapa',
-    email: 'rishiramthapa3@gmail.com',
-    photoURL: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=256&q=80'
-  };
 
   /**
    * Finalizes Google login by persisting to cloud DB and notifying app
@@ -97,7 +103,7 @@ export const LoginModal: React.FC<LoginModalProps> = ({
         hasReceivedCompletionBonus: existing?.hasReceivedCompletionBonus || false
       };
 
-      // Save to central database and local session
+      // Save to central database and local storage
       await DbService.saveStudentProfile(userProfile);
 
       try {
@@ -107,8 +113,6 @@ export const LoginModal: React.FC<LoginModalProps> = ({
       } catch {
         // ignore
       }
-
-      setIsOAuthPopupOpen(false);
 
       if (setUser) setUser(userProfile);
       if (setIsLoggedIn) setIsLoggedIn(true);
@@ -125,52 +129,150 @@ export const LoginModal: React.FC<LoginModalProps> = ({
   }, [setUser, setIsLoggedIn, onSuccess]);
 
   /**
-   * Main Google Sign-In Action
-   * Triggers the Google OAuth popup / sign-in provider immediately on click
-   * without asking for manual email text inputs.
+   * Listen for OAuth popup completion messages via postMessage
    */
-  const handleGoogleSignInClick = async () => {
-    setError('');
+  useEffect(() => {
+    const handleOAuthMessage = async (event: MessageEvent) => {
+      const origin = event.origin;
+      if (
+        !origin.includes(window.location.hostname) &&
+        !origin.endsWith('.run.app') &&
+        !origin.includes('localhost')
+      ) {
+        return;
+      }
 
-    // 1. If official Google Identity Services token client is available, attempt native token request
-    if (typeof window !== 'undefined' && (window as any).google?.accounts?.oauth2) {
-      try {
-        const clientId = (import.meta as any).env?.VITE_GOOGLE_CLIENT_ID;
-        if (clientId) {
-          const client = (window as any).google.accounts.oauth2.initTokenClient({
-            client_id: clientId,
-            scope: 'openid profile email',
-            callback: async (tokenResponse: any) => {
-              if (tokenResponse?.access_token) {
-                try {
-                  const res = await fetch('https://www.googleapis.com/oauth2/v3/userinfo', {
-                    headers: { Authorization: `Bearer ${tokenResponse.access_token}` }
-                  });
-                  const gUser = await res.json();
-                  if (gUser?.email) {
-                    await completeGoogleAuth({
-                      email: gUser.email,
-                      displayName: gUser.name || gUser.given_name || 'Google User',
-                      photoURL: gUser.picture
-                    });
-                    return;
-                  }
-                } catch (fetchErr) {
-                  console.warn('Failed to fetch userinfo from Google', fetchErr);
-                }
-              }
-            }
-          });
-          client.requestAccessToken({ prompt: 'select_account' });
+      if (event.data?.type === 'GOOGLE_AUTH_SUCCESS') {
+        const payload = event.data.payload || {};
+        if (payload.error) {
+          setError(`प्रमाणीकरण असफल: ${payload.error}`);
+          setIsSigningIn(false);
           return;
         }
+
+        if (payload.accessToken) {
+          try {
+            const res = await fetch('https://www.googleapis.com/oauth2/v3/userinfo', {
+              headers: { Authorization: `Bearer ${payload.accessToken}` }
+            });
+            const gUser = await res.json();
+            if (gUser?.email) {
+              await completeGoogleAuth({
+                email: gUser.email,
+                displayName: gUser.name || gUser.given_name || 'Google User',
+                photoURL: gUser.picture
+              });
+              return;
+            }
+          } catch (fetchErr) {
+            console.warn('Failed to fetch userinfo with token', fetchErr);
+          }
+        }
+
+        if (payload.idToken) {
+          const claims = parseJwtPayload(payload.idToken);
+          if (claims?.email) {
+            await completeGoogleAuth({
+              email: claims.email,
+              displayName: claims.name || claims.given_name || 'Google User',
+              photoURL: claims.picture
+            });
+            return;
+          }
+        }
+
+        setIsSigningIn(false);
+      }
+    };
+
+    window.addEventListener('message', handleOAuthMessage);
+    return () => window.removeEventListener('message', handleOAuthMessage);
+  }, [completeGoogleAuth]);
+
+  /**
+   * Main Google Sign-In Action
+   * Triggers the official Google Account Selector popup window directly
+   * without showing any custom React mock selection modal inside the app.
+   */
+  const handleGoogleSignInClick = async () => {
+    setIsSigningIn(true);
+    setError('');
+
+    const clientId = (import.meta as any).env?.VITE_GOOGLE_CLIENT_ID;
+    const redirectUri = `${window.location.origin}/auth/google/callback`;
+
+    // 1. If official Google Identity Services token client is available, trigger official popup
+    if (typeof window !== 'undefined' && (window as any).google?.accounts?.oauth2 && clientId) {
+      try {
+        const client = (window as any).google.accounts.oauth2.initTokenClient({
+          client_id: clientId,
+          scope: 'openid profile email',
+          prompt: 'select_account',
+          callback: async (tokenResponse: any) => {
+            if (tokenResponse?.access_token) {
+              try {
+                const res = await fetch('https://www.googleapis.com/oauth2/v3/userinfo', {
+                  headers: { Authorization: `Bearer ${tokenResponse.access_token}` }
+                });
+                const gUser = await res.json();
+                if (gUser?.email) {
+                  await completeGoogleAuth({
+                    email: gUser.email,
+                    displayName: gUser.name || gUser.given_name || 'Google User',
+                    photoURL: gUser.picture
+                  });
+                  return;
+                }
+              } catch (fetchErr) {
+                console.warn('Failed to fetch userinfo from Google', fetchErr);
+              }
+            }
+            setIsSigningIn(false);
+          }
+        });
+        client.requestAccessToken({ prompt: 'select_account' });
+        return;
       } catch (gisErr) {
-        console.warn('GIS Token Client skipped or unavailable', gisErr);
+        console.warn('GIS Token Client error, falling back to direct popup window', gisErr);
       }
     }
 
-    // 2. Launch Google OAuth Popup provider immediately
-    setIsOAuthPopupOpen(true);
+    // 2. Direct browser popup window to official Google OAuth 2.0 Account Selector endpoint
+    const width = 500;
+    const height = 620;
+    const left = window.screenX + Math.max(0, (window.outerWidth - width) / 2);
+    const top = window.screenY + Math.max(0, (window.outerHeight - height) / 2);
+
+    const googleAuthUrl = clientId 
+      ? `https://accounts.google.com/o/oauth2/v2/auth?` + new URLSearchParams({
+          client_id: clientId,
+          redirect_uri: redirectUri,
+          response_type: 'token id_token',
+          scope: 'openid email profile',
+          prompt: 'select_account',
+          nonce: Math.random().toString(36).substring(2)
+        }).toString()
+      : `https://accounts.google.com/AccountChooser?service=lso&continue=${encodeURIComponent(redirectUri)}`;
+
+    const popup = window.open(
+      googleAuthUrl,
+      'GoogleAccountSelector',
+      `width=${width},height=${height},left=${left},top=${top},status=no,resizable=yes,scrollbars=yes`
+    );
+
+    if (!popup || popup.closed || typeof popup.closed === 'undefined') {
+      setError('पप-अप विन्डो ब्लक भयो। कृपया ब्राउजरमा पप-अप अनुमति दिनुहोस् (Please allow popups in your browser).');
+      setIsSigningIn(false);
+      return;
+    }
+
+    // Poll for popup closure if the user dismisses the window
+    const checkClosedInterval = setInterval(() => {
+      if (popup.closed) {
+        clearInterval(checkClosedInterval);
+        setIsSigningIn(false);
+      }
+    }, 1000);
   };
 
   /**
@@ -265,302 +367,174 @@ export const LoginModal: React.FC<LoginModalProps> = ({
   if (!isOpen) return null;
 
   return (
-    <>
-      {/* Primary Login Card */}
+    <div 
+      id="login-auth-modal-overlay"
+      className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-md overflow-y-auto"
+    >
       <div 
-        id="login-auth-modal-overlay"
-        className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-md overflow-y-auto"
+        id="login-auth-modal-card"
+        className="relative w-full max-w-md bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl shadow-2xl overflow-hidden my-auto"
       >
-        <div 
-          id="login-auth-modal-card"
-          className="relative w-full max-w-md bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl shadow-2xl overflow-hidden my-auto"
-        >
-          {/* Header Branding */}
-          <div className="p-6 sm:p-7 text-center border-b border-slate-100 dark:border-slate-800/80 bg-gradient-to-b from-blue-50/50 dark:from-blue-950/20 to-transparent">
-            <div className="flex justify-center mb-3">
-              <BrandLogo variant="full" className="h-11 w-auto" />
-            </div>
-            <h2 className="text-xl sm:text-2xl font-black text-slate-900 dark:text-white tracking-tight">
-              बैंकिङ तयारी नेपालमा स्वागत छ
-            </h2>
-            <p className="text-xs sm:text-sm text-slate-600 dark:text-slate-400 mt-1">
-              नेपाल राष्ट्र बैंक, बाणिज्य बैंक तथा संगठित संस्था परीक्षा तयारी
-            </p>
+        {/* Header Branding */}
+        <div className="p-6 sm:p-7 text-center border-b border-slate-100 dark:border-slate-800/80 bg-gradient-to-b from-blue-50/50 dark:from-blue-950/20 to-transparent">
+          <div className="flex justify-center mb-3">
+            <BrandLogo variant="full" className="h-11 w-auto" />
           </div>
-
-          {/* Error Message (Only when actual action errors occur) */}
-          {error && (
-            <div 
-              id="login-error-alert"
-              className="mx-6 sm:mx-7 mt-4 p-3 rounded-2xl bg-rose-50 dark:bg-rose-950/40 border border-rose-200 dark:border-rose-900/50 text-rose-700 dark:text-rose-400 text-xs font-semibold"
-            >
-              {error}
-            </div>
-          )}
-
-          {/* Main Content Area */}
-          <div className="p-6 sm:p-7 space-y-5">
-            {activeTab === 'google' ? (
-              /* CLEAN GOOGLE SIGN-IN TAB - No manual text boxes, no duplicate buttons */
-              <div className="space-y-5">
-                <p className="text-xs sm:text-sm text-center text-slate-600 dark:text-slate-400">
-                  आफ्नो सुरक्षित Google खाता मार्फत सिधै १-क्लिकमा प्रवेश गर्नुहोस्
-                </p>
-
-                {/* THE SINGLE, PRIMARY GOOGLE SIGN-IN BUTTON */}
-                <button
-                  type="button"
-                  id="btn-google-login-primary"
-                  disabled={isSigningIn}
-                  onClick={handleGoogleSignInClick}
-                  className="w-full flex items-center justify-center gap-3 py-3.5 px-5 bg-white dark:bg-slate-800 hover:bg-slate-50 dark:hover:bg-slate-750 text-slate-800 dark:text-white font-bold text-sm sm:text-base rounded-2xl border-2 border-slate-200 dark:border-slate-700 shadow-sm hover:shadow-md transition-all active:scale-[0.99] cursor-pointer group disabled:opacity-50"
-                >
-                  <GoogleGIcon className="w-5 h-5 group-hover:scale-110 transition-transform shrink-0" />
-                  <span>
-                    {isSigningIn ? 'Google खाता प्रमाणीकरण हुँदैछ...' : 'Google मार्फत लगइन गर्नुहोस्'}
-                  </span>
-                </button>
-
-                {/* Simple Link/Tab for Email & Password */}
-                <div className="pt-4 border-t border-slate-100 dark:border-slate-800 text-center">
-                  <button
-                    type="button"
-                    id="link-switch-to-email"
-                    onClick={() => { setActiveTab('email'); setError(''); }}
-                    className="text-xs sm:text-sm text-slate-500 hover:text-blue-600 dark:text-slate-400 dark:hover:text-blue-400 font-medium inline-flex items-center gap-1.5 cursor-pointer transition"
-                  >
-                    <Mail className="w-4 h-4 text-blue-500" />
-                    <span>वा इमेल र पासवर्ड मार्फत लगइन गर्नुहोस्</span>
-                  </button>
-                </div>
-              </div>
-            ) : (
-              /* EMAIL & PASSWORD TAB */
-              <div className="space-y-4">
-                <div className="flex items-center justify-between pb-2 border-b border-slate-100 dark:border-slate-800">
-                  <h3 className="text-sm font-bold text-slate-800 dark:text-slate-200">
-                    {isRegisterMode ? 'नयाँ खाता सिर्जना' : 'इमेल र पासवर्ड लगइन'}
-                  </h3>
-                  <button
-                    type="button"
-                    id="link-back-to-google"
-                    onClick={() => { setActiveTab('google'); setError(''); }}
-                    className="text-xs text-blue-600 dark:text-blue-400 hover:underline flex items-center gap-1 font-semibold cursor-pointer"
-                  >
-                    <ArrowLeft className="w-3.5 h-3.5" />
-                    <span>Google Sign-In</span>
-                  </button>
-                </div>
-
-                <form onSubmit={handleEmailAuth} className="space-y-3">
-                  {isRegisterMode && (
-                    <div>
-                      <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
-                        पूरा नाम (Full Name) *
-                      </label>
-                      <div className="relative">
-                        <User className="w-4 h-4 text-slate-400 absolute left-3.5 top-3.5" />
-                        <input
-                          type="text"
-                          id="email-register-fullname-input"
-                          placeholder="उदा: ऋषि राम थापा"
-                          value={fullName}
-                          onChange={(e) => setFullName(e.target.value)}
-                          className="w-full pl-10 pr-3 py-2.5 text-sm rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
-                          required
-                        />
-                      </div>
-                    </div>
-                  )}
-
-                  <div>
-                    <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
-                      इमेल ठेगाना (Email Address) *
-                    </label>
-                    <div className="relative">
-                      <Mail className="w-4 h-4 text-slate-400 absolute left-3.5 top-3.5" />
-                      <input
-                        type="email"
-                        id="email-login-email-input"
-                        placeholder="name@example.com"
-                        value={email}
-                        onChange={(e) => setEmail(e.target.value)}
-                        className="w-full pl-10 pr-3 py-2.5 text-sm rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
-                        required
-                      />
-                    </div>
-                  </div>
-
-                  <div>
-                    <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
-                      पासवर्ड (Password) *
-                    </label>
-                    <div className="relative">
-                      <KeyRound className="w-4 h-4 text-slate-400 absolute left-3.5 top-3.5" />
-                      <input
-                        type="password"
-                        id="email-login-password-input"
-                        placeholder="कम्तिमा ६ अक्षर"
-                        value={password}
-                        onChange={(e) => setPassword(e.target.value)}
-                        className="w-full pl-10 pr-3 py-2.5 text-sm rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
-                        required
-                      />
-                    </div>
-                  </div>
-
-                  <button
-                    type="submit"
-                    id="btn-email-submit"
-                    disabled={isSigningIn}
-                    className="w-full py-3 px-4 bg-blue-600 hover:bg-blue-700 active:scale-[0.99] text-white font-bold text-sm rounded-2xl shadow-md transition flex items-center justify-center gap-2 cursor-pointer mt-2 disabled:opacity-50"
-                  >
-                    <span>{isRegisterMode ? 'नयाँ खाता सिर्जना गर्नुहोस्' : 'लगइन गर्नुहोस्'}</span>
-                    <ArrowRight className="w-4 h-4" />
-                  </button>
-
-                  <div className="text-center pt-2">
-                    <button
-                      type="button"
-                      id="btn-toggle-register-mode"
-                      onClick={() => { setIsRegisterMode(!isRegisterMode); setError(''); }}
-                      className="text-xs text-blue-600 dark:text-blue-400 hover:underline font-semibold cursor-pointer"
-                    >
-                      {isRegisterMode ? 'पहिले नै खाता छ? लगइन गर्नुहोस्' : 'नयाँ हुनुहुन्छ? नयाँ खाता दर्ता गर्नुहोस्'}
-                    </button>
-                  </div>
-                </form>
-              </div>
-            )}
-          </div>
+          <h2 className="text-xl sm:text-2xl font-black text-slate-900 dark:text-white tracking-tight">
+            बैंकिङ तयारी नेपालमा स्वागत छ
+          </h2>
+          <p className="text-xs sm:text-sm text-slate-600 dark:text-slate-400 mt-1">
+            नेपाल राष्ट्र बैंक, बाणिज्य बैंक तथा संगठित संस्था परीक्षा तयारी
+          </p>
         </div>
-      </div>
 
-      {/* GOOGLE OAUTH POPUP / SIGN-IN PROVIDER DIALOG */}
-      {isOAuthPopupOpen && (
-        <div 
-          id="google-oauth-popup-overlay"
-          className="fixed inset-0 z-60 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-in fade-in duration-200"
-        >
+        {/* Error Message */}
+        {error && (
           <div 
-            id="google-oauth-popup-window"
-            className="w-full max-w-md bg-white text-slate-900 rounded-2xl shadow-2xl border border-slate-200 overflow-hidden flex flex-col font-sans"
+            id="login-error-alert"
+            className="mx-6 sm:mx-7 mt-4 p-3 rounded-2xl bg-rose-50 dark:bg-rose-950/40 border border-rose-200 dark:border-rose-900/50 text-rose-700 dark:text-rose-400 text-xs font-semibold"
           >
-            {/* Google OAuth Header */}
-            <div className="p-6 pb-4 border-b border-slate-100 flex items-start justify-between">
-              <div className="space-y-1">
-                <div className="flex items-center gap-2 mb-2">
-                  <GoogleGIcon className="w-6 h-6" />
-                  <span className="text-base font-medium text-slate-700">Sign in with Google</span>
-                </div>
-                <h3 className="text-lg font-bold text-slate-900 leading-tight">
-                  Choose an account
-                </h3>
-                <p className="text-xs text-slate-500">
-                  to continue to <span className="font-semibold text-slate-700">Banking Tayari Nepal</span>
-                </p>
-              </div>
-              <button
-                type="button"
-                id="btn-close-google-oauth-popup"
-                onClick={() => setIsOAuthPopupOpen(false)}
-                className="text-slate-400 hover:text-slate-600 p-1.5 rounded-full hover:bg-slate-100 transition cursor-pointer"
-              >
-                <X className="w-5 h-5" />
-              </button>
-            </div>
+            {error}
+          </div>
+        )}
 
-            {/* Account List */}
-            <div className="p-6 py-4 space-y-2 max-h-[320px] overflow-y-auto">
-              {/* Authenticated User Account Card */}
+        {/* Main Content Area */}
+        <div className="p-6 sm:p-7 space-y-5">
+          {activeTab === 'google' ? (
+            /* CLEAN GOOGLE SIGN-IN TAB - No mock dialogs, direct OAuth trigger */
+            <div className="space-y-5">
+              <p className="text-xs sm:text-sm text-center text-slate-600 dark:text-slate-400">
+                आफ्नो सुरक्षित Google खाता मार्फत सिधै १-क्लिकमा प्रवेश गर्नुहोस्
+              </p>
+
+              {/* PRIMARY GOOGLE SIGN-IN BUTTON */}
               <button
                 type="button"
-                id="google-account-select-primary"
+                id="btn-google-login-primary"
                 disabled={isSigningIn}
-                onClick={() => completeGoogleAuth(defaultGoogleAccount)}
-                className="w-full p-3.5 flex items-center gap-3.5 rounded-xl border border-slate-200 hover:border-blue-400 hover:bg-blue-50/40 transition-all text-left cursor-pointer group"
+                onClick={handleGoogleSignInClick}
+                className="w-full flex items-center justify-center gap-3 py-3.5 px-5 bg-white dark:bg-slate-800 hover:bg-slate-50 dark:hover:bg-slate-750 text-slate-800 dark:text-white font-bold text-sm sm:text-base rounded-2xl border-2 border-slate-200 dark:border-slate-700 shadow-sm hover:shadow-md transition-all active:scale-[0.99] cursor-pointer group disabled:opacity-50"
               >
-                <img
-                  src={defaultGoogleAccount.photoURL}
-                  alt={defaultGoogleAccount.displayName}
-                  referrerPolicy="no-referrer"
-                  className="w-10 h-10 rounded-full border border-slate-200 object-cover shadow-xs group-hover:scale-105 transition"
-                />
-                <div className="flex-1 min-w-0">
-                  <p className="text-sm font-bold text-slate-900 truncate group-hover:text-blue-600 transition">
-                    {defaultGoogleAccount.displayName}
-                  </p>
-                  <p className="text-xs text-slate-500 truncate font-mono">
-                    {defaultGoogleAccount.email}
-                  </p>
-                  <div className="flex items-center gap-1 mt-0.5 text-[11px] text-emerald-600 font-medium">
-                    <CheckCircle2 className="w-3 h-3" />
-                    <span>सक्रिय Google खाता (Ready to sign in)</span>
-                  </div>
-                </div>
-                <ArrowRight className="w-4 h-4 text-slate-400 group-hover:text-blue-600 transition" />
+                <GoogleGIcon className="w-5 h-5 group-hover:scale-110 transition-transform shrink-0" />
+                <span>
+                  {isSigningIn ? 'Google खाता प्रमाणीकरण हुँदैछ...' : 'Google मार्फत लगइन गर्नुहोस्'}
+                </span>
               </button>
 
-              {/* Use Another Google Account Toggle */}
-              {!showCustomGoogleInput ? (
+              {/* Simple Link to Email & Password */}
+              <div className="pt-4 border-t border-slate-100 dark:border-slate-800 text-center">
                 <button
                   type="button"
-                  id="btn-google-use-another-account"
-                  onClick={() => setShowCustomGoogleInput(true)}
-                  className="w-full p-3 flex items-center gap-3 rounded-xl hover:bg-slate-50 text-slate-600 hover:text-slate-900 transition text-left cursor-pointer text-xs font-semibold border border-transparent hover:border-slate-200"
+                  id="link-switch-to-email"
+                  onClick={() => { setActiveTab('email'); setError(''); }}
+                  className="text-xs sm:text-sm text-slate-500 hover:text-blue-600 dark:text-slate-400 dark:hover:text-blue-400 font-medium inline-flex items-center gap-1.5 cursor-pointer transition"
                 >
-                  <div className="w-8 h-8 rounded-full bg-slate-100 flex items-center justify-center text-slate-500">
-                    <User className="w-4 h-4" />
-                  </div>
-                  <span>Use another Google account (अन्य खाता प्रयोग गर्नुहोस्)</span>
+                  <Mail className="w-4 h-4 text-blue-500" />
+                  <span>वा इमेल र पासवर्ड मार्फत लगइन गर्नुहोस्</span>
                 </button>
-              ) : (
-                <div className="p-3 bg-slate-50 rounded-xl border border-slate-200 space-y-2 mt-2">
-                  <label className="block text-xs font-bold text-slate-700">
-                    Enter other Google Email Address:
+              </div>
+            </div>
+          ) : (
+            /* EMAIL & PASSWORD TAB */
+            <div className="space-y-4">
+              <div className="flex items-center justify-between pb-2 border-b border-slate-100 dark:border-slate-800">
+                <h3 className="text-sm font-bold text-slate-800 dark:text-slate-200">
+                  {isRegisterMode ? 'नयाँ खाता सिर्जना' : 'इमेल र पासवर्ड लगइन'}
+                </h3>
+                <button
+                  type="button"
+                  id="link-back-to-google"
+                  onClick={() => { setActiveTab('google'); setError(''); }}
+                  className="text-xs text-blue-600 dark:text-blue-400 hover:underline flex items-center gap-1 font-semibold cursor-pointer"
+                >
+                  <ArrowLeft className="w-3.5 h-3.5" />
+                  <span>Google Sign-In</span>
+                </button>
+              </div>
+
+              <form onSubmit={handleEmailAuth} className="space-y-3">
+                {isRegisterMode && (
+                  <div>
+                    <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
+                      पूरा नाम (Full Name) *
+                    </label>
+                    <div className="relative">
+                      <User className="w-4 h-4 text-slate-400 absolute left-3.5 top-3.5" />
+                      <input
+                        type="text"
+                        id="email-register-fullname-input"
+                        placeholder="उदा: ऋषि राम थापा"
+                        value={fullName}
+                        onChange={(e) => setFullName(e.target.value)}
+                        className="w-full pl-10 pr-3 py-2.5 text-sm rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        required
+                      />
+                    </div>
+                  </div>
+                )}
+
+                <div>
+                  <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
+                    इमेल ठेगाना (Email Address) *
                   </label>
-                  <div className="flex gap-2">
+                  <div className="relative">
+                    <Mail className="w-4 h-4 text-slate-400 absolute left-3.5 top-3.5" />
                     <input
                       type="email"
-                      id="google-custom-email-input"
-                      placeholder="username@gmail.com"
-                      value={customGoogleEmail}
-                      onChange={(e) => setCustomGoogleEmail(e.target.value)}
-                      className="flex-1 px-3 py-2 text-xs rounded-lg border border-slate-300 focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white"
+                      id="email-login-email-input"
+                      placeholder="name@example.com"
+                      value={email}
+                      onChange={(e) => setEmail(e.target.value)}
+                      className="w-full pl-10 pr-3 py-2.5 text-sm rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      required
                     />
-                    <button
-                      type="button"
-                      id="btn-confirm-custom-google-email"
-                      onClick={() => {
-                        if (customGoogleEmail.includes('@')) {
-                          completeGoogleAuth({
-                            email: customGoogleEmail,
-                            displayName: customGoogleEmail.split('@')[0].replace(/[._-]/g, ' ')
-                          });
-                        }
-                      }}
-                      className="px-3 py-2 bg-blue-600 text-white text-xs font-bold rounded-lg hover:bg-blue-700 transition cursor-pointer"
-                    >
-                      Sign In
-                    </button>
                   </div>
                 </div>
-              )}
-            </div>
 
-            {/* Google OAuth Consent Notice */}
-            <div className="p-4 bg-slate-50 border-t border-slate-100 text-[11px] text-slate-500 leading-relaxed">
-              <p className="flex items-start gap-1.5">
-                <Lock className="w-3.5 h-3.5 text-slate-400 shrink-0 mt-0.5" />
-                <span>
-                  To continue, Google will securely share your name, email address, and profile picture with <strong>Banking Tayari Nepal</strong>.
-                </span>
-              </p>
+                <div>
+                  <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
+                    पासवर्ड (Password) *
+                  </label>
+                  <div className="relative">
+                    <KeyRound className="w-4 h-4 text-slate-400 absolute left-3.5 top-3.5" />
+                    <input
+                      type="password"
+                      id="email-login-password-input"
+                      placeholder="कम्तिमा ६ अक्षर"
+                      value={password}
+                      onChange={(e) => setPassword(e.target.value)}
+                      className="w-full pl-10 pr-3 py-2.5 text-sm rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      required
+                    />
+                  </div>
+                </div>
+
+                <button
+                  type="submit"
+                  id="btn-email-submit"
+                  disabled={isSigningIn}
+                  className="w-full py-3 px-4 bg-blue-600 hover:bg-blue-700 active:scale-[0.99] text-white font-bold text-sm rounded-2xl shadow-md transition flex items-center justify-center gap-2 cursor-pointer mt-2 disabled:opacity-50"
+                >
+                  <span>{isRegisterMode ? 'नयाँ खाता सिर्जना गर्नुहोस्' : 'लगइन गर्नुहोस्'}</span>
+                  <ArrowRight className="w-4 h-4" />
+                </button>
+
+                <div className="text-center pt-2">
+                  <button
+                    type="button"
+                    id="btn-toggle-register-mode"
+                    onClick={() => { setIsRegisterMode(!isRegisterMode); setError(''); }}
+                    className="text-xs text-blue-600 dark:text-blue-400 hover:underline font-semibold cursor-pointer"
+                  >
+                    {isRegisterMode ? 'पहिले नै खाता छ? लगइन गर्नुहोस्' : 'नयाँ हुनुहुन्छ? नयाँ खाता दर्ता गर्नुहोस्'}
+                  </button>
+                </div>
+              </form>
             </div>
-          </div>
+          )}
         </div>
-      )}
-    </>
+      </div>
+    </div>
   );
 };
 

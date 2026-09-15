@@ -33,6 +33,55 @@ app.get("/health", (_req, res) => {
   res.status(200).json({ status: "ok" });
 });
 
+// Google OAuth Popup Callback Handler
+app.get(["/auth/google/callback", "/auth/google/callback/", "/auth/callback", "/auth/callback/"], (_req, res) => {
+  res.send(`
+    <!DOCTYPE html>
+    <html lang="en">
+      <head>
+        <meta charset="utf-8" />
+        <title>Google Authentication</title>
+        <style>
+          body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; display: flex; align-items: center; justify-content: center; height: 100vh; margin: 0; background: #f8fafc; color: #1e293b; }
+          .card { text-align: center; background: white; padding: 32px; border-radius: 20px; box-shadow: 0 10px 25px rgba(0,0,0,0.06); max-width: 380px; width: 90%; border: 1px solid #e2e8f0; }
+          .spinner { width: 36px; height: 36px; border: 3px solid #e2e8f0; border-top-color: #3b82f6; border-radius: 50%; animation: spin 0.8s linear infinite; margin: 0 auto 16px; }
+          @keyframes spin { to { transform: rotate(360deg); } }
+        </style>
+      </head>
+      <body>
+        <div class="card">
+          <div class="spinner"></div>
+          <h2 style="margin: 0 0 8px; font-size: 18px; font-weight: 700;">Google Authentication</h2>
+          <p style="margin: 0; font-size: 13px; color: #64748b;">Completing authentication. This window will close automatically...</p>
+        </div>
+        <script>
+          try {
+            const hash = window.location.hash.substring(1);
+            const hashParams = new URLSearchParams(hash);
+            const queryParams = new URLSearchParams(window.location.search);
+            const accessToken = hashParams.get('access_token') || queryParams.get('access_token');
+            const idToken = hashParams.get('id_token') || queryParams.get('id_token');
+            const code = queryParams.get('code');
+            const error = queryParams.get('error') || hashParams.get('error');
+
+            if (window.opener) {
+              window.opener.postMessage({
+                type: 'GOOGLE_AUTH_SUCCESS',
+                payload: { accessToken, idToken, code, error }
+              }, '*');
+              setTimeout(() => { window.close(); }, 700);
+            } else {
+              window.location.href = '/';
+            }
+          } catch (e) {
+            console.error('Error sending message to opener', e);
+          }
+        </script>
+      </body>
+    </html>
+  `);
+});
+
 // Lazy initialize Gemini client
 let genAI: GoogleGenAI | null = null;
 function getGeminiClient(): GoogleGenAI | null {
